@@ -50,7 +50,6 @@
             align-items: center;
         }
 
-        /* Vistas (Pública vs Panel) */
         .view {
             width: 100%;
             display: none;
@@ -61,7 +60,6 @@
             align-items: center;
         }
 
-        /* Estilos Perfil Público */
         .profile-header {
             text-align: center;
             margin-bottom: 30px;
@@ -152,7 +150,6 @@
             text-align: center;
         }
 
-        /* Paneles de Autenticación y Administración */
         .card-box {
             background: var(--card-bg);
             border: 1px solid rgba(255, 255, 255, 0.08);
@@ -260,14 +257,14 @@
             font-size: 0.85rem;
             color: var(--text-secondary);
         }
-        .switch-auth a { color: var(--accent-color); text-decoration: none; font-weight: 600; }
+        .switch-auth a { color: var(--accent-color); text-decoration: none; font-weight: 600; cursor: pointer; }
     </style>
 </head>
 <body>
 
     <div class="container">
         
-        <!-- VISTA 1: PÁGINA PÚBLICA DEL USUARIO -->
+        <!-- VISTA 1: PÁGINA PÚBLICA -->
         <div id="public-view" class="view">
             <div class="profile-header">
                 <div class="avatar-container">
@@ -276,11 +273,9 @@
                 <h1 class="title" id="pub-name">Cargando...</h1>
                 <p class="bio" id="pub-bio"></p>
             </div>
-            <div class="links-list" id="pub-links">
-                <!-- Se inyectan dinámicamente -->
-            </div>
+            <div class="links-list" id="pub-links"></div>
             <div style="margin-top: 20px; font-size: 0.8rem; color: var(--text-secondary);">
-                Creá tu propia página en <a href="#" onclick="showView('auth-view')" style="color: var(--accent-color);">PeeoLinks</a>
+                Crea tu propia página en <a onclick="showView('auth-view')" style="color: var(--accent-color);">PeeoLinks</a>
             </div>
         </div>
 
@@ -307,7 +302,7 @@
                 
                 <div class="switch-auth">
                     <span id="switch-text">¿No tienes cuenta?</span> 
-                    <a href="#" id="switch-link" onclick="toggleAuthMode()">Regístrate aquí</a>
+                    <a id="switch-link" onclick="toggleAuthMode()">Regístrate aquí</a>
                 </div>
             </div>
         </div>
@@ -320,55 +315,62 @@
             </div>
 
             <div class="card-box" style="margin-bottom: 20px;">
-                <h3 style="font-size: 1rem; margin-bottom: 12px;">Agregar Nuevo Enlace o Número</h3>
+                <h3 style="font-size: 1rem; margin-bottom: 12px;">Agregar Nuevo Enlace</h3>
                 <div class="form-group">
-                    <label>Título del Botón (Ej: WhatsApp, Catálogo)</label>
+                    <label>Título del Botón</label>
                     <input type="text" id="link-title" class="form-control" placeholder="WhatsApp Oficial">
                 </div>
                 <div class="form-group">
-                    <label>URL o enlace (Ej: https://wa.me/593...)</label>
-                    <input type="text" id="link-url" class="form-control" placeholder="https://...">
+                    <label>URL o enlace</label>
+                    <input type="text" id="link-url" class="form-control" placeholder="https://wa.me/...">
                 </div>
                 <div class="form-group">
-                    <label>Ícono (FontAwesome class - Opcional)</label>
-                    <input type="text" id="link-icon" class="form-control" value="fa-solid fa-link" placeholder="fa-brands fa-whatsapp">
+                    <label>Ícono (FontAwesome)</label>
+                    <input type="text" id="link-icon" class="form-control" value="fa-solid fa-link">
                 </div>
                 <button class="btn btn-primary" onclick="addLink()">Guardar Enlace</button>
             </div>
 
             <div class="card-box">
                 <h3 style="font-size: 1rem; margin-bottom: 12px;">Tus Enlaces Activos</h3>
-                <div id="admin-links-list">
-                    <!-- Se cargan los enlaces del usuario -->
-                </div>
+                <div id="admin-links-list"></div>
             </div>
         </div>
 
     </div>
 
     <script>
-        // CONFIGURA TUS CREDENCIALES DE SUPABASE AQUÍ
-        const SUPABASE_URL = 'TUS_SUPABASE_URL';
-        const SUPABASE_ANON_KEY = 'TUS_SUPABASE_ANON_KEY';
-        const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+        // Credenciales configuradas correctamente
+        const SUPABASE_URL = 'https://vvupsijdebwvhfiwqjdy.supabase.co';
+        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZ2dXBzaWpkZWJ3dmhmaXdxamR5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODk0MzE4NDYsImV4cCI6MjEwNTAwNzg0Nn0.8OT8tJOuNaPJZt4Ni9Yg0vYnJcRlCvmmC_KlG-ZsLwE';
+        
+        let supabaseClient;
+        try {
+            supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+        } catch (e) {
+            console.error("Error al iniciar Supabase:", e);
+        }
 
         let isRegistering = false;
         let currentUser = null;
 
-        // Inicialización al cargar la página
         window.addEventListener('DOMContentLoaded', async () => {
             const urlParams = new URLSearchParams(window.location.search);
             const usernameParam = urlParams.get('u');
 
             if (usernameParam) {
                 loadPublicProfile(usernameParam);
-            } else {
-                const { data: { session } } = await supabaseClient.auth.getSession();
-                if (session) {
-                    currentUser = session.user;
-                    showView('admin-view');
-                    loadAdminLinks();
-                } else {
+            } else if (supabaseClient) {
+                try {
+                    const { data: { session } } = await supabaseClient.auth.getSession();
+                    if (session) {
+                        currentUser = session.user;
+                        showView('admin-view');
+                        loadAdminLinks();
+                    } else {
+                        showView('auth-view');
+                    }
+                } catch (err) {
                     showView('auth-view');
                 }
             }
@@ -397,8 +399,13 @@
         }
 
         async function handleAuth() {
-            const email = document.getElementById('input-email').value;
-            const password = document.getElementById('input-password').value;
+            if (!supabaseClient) {
+                showAlert('Error al conectar con Supabase.');
+                return;
+            }
+
+            const email = document.getElementById('input-email').value.trim();
+            const password = document.getElementById('input-password').value.trim();
             const username = document.getElementById('input-username').value.trim().toLowerCase();
 
             if (!email || !password) {
@@ -421,7 +428,7 @@
                 }
             } else {
                 const { data, error } = await supabaseClient.auth.signInWithPassword({ email, password });
-                if (error) { showAlert('Credenciales incorrectas.'); return; }
+                if (error) { showAlert('Correo o contraseña incorrectos.'); return; }
                 
                 currentUser = data.user;
                 showView('admin-view');
@@ -434,7 +441,6 @@
             window.location.href = window.location.pathname;
         }
 
-        // Cargar Perfil Público
         async function loadPublicProfile(username) {
             showView('public-view');
             const { data: profile, error } = await supabaseClient
@@ -445,7 +451,7 @@
 
             if (error || !profile) {
                 document.getElementById('pub-name').textContent = 'Página no encontrada';
-                document.getElementById('pub-bio').textContent = 'El usuario que buscas no existe o fue eliminado.';
+                document.getElementById('pub-bio').textContent = 'El usuario que buscas no existe.';
                 return;
             }
 
@@ -453,7 +459,6 @@
             document.getElementById('pub-bio').textContent = profile.bio || 'Enlaces oficiales.';
             document.getElementById('pub-avatar').textContent = profile.username.substring(0, 2).toUpperCase();
 
-            // Cargar enlaces del usuario
             const { data: links } = await supabaseClient
                 .from('links')
                 .select('*')
@@ -480,7 +485,6 @@
             }
         }
 
-        // Cargar Enlaces en el Panel de Administración
         async function loadAdminLinks() {
             const { data: links } = await supabaseClient
                 .from('links')
