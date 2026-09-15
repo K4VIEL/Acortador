@@ -6,7 +6,6 @@
     <title>PeeoLinks | Crea tu minisitio profesional</title>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <!-- SDK de Supabase -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     
     <style>
@@ -20,6 +19,33 @@
             --accent-gradient: linear-gradient(135deg, #38bdf8 0%, #818cf8 100%);
             --danger: #ef4444;
             --success: #22c55e;
+        }
+
+        /* Temas personalizados */
+        body.theme-neon {
+            --bg-color: #050505;
+            --card-bg: rgba(20, 20, 20, 0.8);
+            --card-hover: rgba(40, 40, 40, 0.9);
+            --accent-color: #22c55e;
+            --accent-gradient: linear-gradient(135deg, #22c55e 0%, #38bdf8 100%);
+        }
+
+        body.theme-sunset {
+            --bg-color: #1e1b4b;
+            --card-bg: rgba(49, 46, 129, 0.5);
+            --card-hover: rgba(67, 56, 202, 0.7);
+            --accent-color: #f43f5e;
+            --accent-gradient: linear-gradient(135deg, #f43f5e 0%, #fb923c 100%);
+        }
+
+        body.theme-light {
+            --bg-color: #f8fafc;
+            --card-bg: rgba(255, 255, 255, 0.9);
+            --card-hover: rgba(241, 245, 249, 1);
+            --text-primary: #0f172a;
+            --text-secondary: #64748b;
+            --accent-color: #2563eb;
+            --accent-gradient: linear-gradient(135deg, #2563eb 0%, #7c3aed 100%);
         }
 
         * {
@@ -40,6 +66,7 @@
             justify-content: center;
             align-items: center;
             padding: 20px;
+            transition: background 0.3s ease;
         }
 
         .container {
@@ -120,7 +147,7 @@
             align-items: center;
             justify-content: space-between;
             background: var(--card-bg);
-            border: 1px solid rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.08);
             backdrop-filter: blur(10px);
             padding: 16px 20px;
             border-radius: 14px;
@@ -129,6 +156,7 @@
             font-weight: 600;
             font-size: 0.95rem;
             transition: all 0.3s ease;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
         }
 
         .link-card:hover {
@@ -141,6 +169,13 @@
             display: flex;
             align-items: center;
             gap: 14px;
+        }
+
+        .link-content img.link-thumb {
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            object-fit: cover;
         }
 
         .link-content i {
@@ -161,7 +196,7 @@
             margin-bottom: 20px;
         }
 
-        .card-box h2, .card-box h3 {
+        .card-box h3 {
             margin-bottom: 15px;
             font-size: 1.1rem;
         }
@@ -264,7 +299,7 @@
         .switch-auth a { color: var(--accent-color); text-decoration: none; font-weight: 600; cursor: pointer; }
     </style>
 </head>
-<body>
+<body id="page-body">
 
     <div class="container">
         
@@ -272,7 +307,9 @@
         <div id="public-view" class="view">
             <div class="profile-header">
                 <div class="avatar-container">
-                    <div class="avatar" id="pub-avatar">VP</div>
+                    <div class="avatar" id="pub-avatar-container">
+                        <span id="pub-avatar-text">VP</span>
+                    </div>
                 </div>
                 <h1 class="title" id="pub-name">Cargando...</h1>
                 <p class="bio" id="pub-bio"></p>
@@ -286,7 +323,7 @@
         <!-- VISTA 2: LOGIN / REGISTRO -->
         <div id="auth-view" class="view active">
             <div class="card-box">
-                <h2 id="auth-title">Iniciar Sesión</h2>
+                <h2 id="auth-title" style="margin-bottom: 15px;">Iniciar Sesión</h2>
                 <div id="auth-alert" class="alert"></div>
                 
                 <div class="form-group" id="group-username" style="display:none;">
@@ -318,33 +355,70 @@
                 <button class="btn btn-danger" onclick="logout()">Cerrar Sesión</button>
             </div>
 
-            <!-- Caja con el Link Personalizado -->
+            <!-- Link Público -->
             <div class="card-box" style="border-color: rgba(56, 189, 248, 0.3);">
                 <h3 style="font-size: 0.95rem; color: var(--accent-color); margin-bottom: 8px;"><i class="fa-solid fa-share-nodes"></i> Tu Enlace Público:</h3>
                 <input type="text" id="share-link-input" class="form-control" readonly style="margin-bottom: 10px; font-size: 0.85rem; background: rgba(0,0,0,0.3);" onclick="this.select()">
                 <a id="share-link-btn" href="#" target="_blank" class="btn btn-primary" style="font-size: 0.85rem; padding: 10px;">Ver mi página pública</a>
             </div>
 
+            <!-- Personalizar Perfil y Tema -->
             <div class="card-box">
-                <h3 style="font-size: 1rem;">Agregar Nuevo Enlace</h3>
+                <h3>Personalizar Perfil y Tema</h3>
+                <div class="form-group">
+                    <label>Nombre a mostrar</label>
+                    <input type="text" id="profile-fullname" class="form-control" placeholder="Variedades Peeo">
+                </div>
+                <div class="form-group">
+                    <label>Biografía corta</label>
+                    <input type="text" id="profile-bio" class="form-control" placeholder="Tu tienda de confianza...">
+                </div>
+                <div class="form-group">
+                    <label>URL de tu Foto de Perfil / Logo (Ej: enlace de imagen)</label>
+                    <input type="text" id="profile-avatar" class="form-control" placeholder="https://... o link de foto">
+                </div>
+                <div class="form-group">
+                    <label>Seleccionar Tema y Estilo</label>
+                    <select id="profile-theme" class="form-control">
+                        <option value="default">Oscuro Moderno (Azul)</option>
+                        <option value="neon">Neón Gamer (Verde/Negro)</option>
+                        <option value="sunset">Sunset Atardecer (Morado/Naranja)</option>
+                        <option value="light">Claro Minimalista (Blanco)</option>
+                    </select>
+                </div>
+                <button class="btn btn-primary" onclick="saveProfileChanges()">Guardar Cambios de Perfil</button>
+            </div>
+
+            <!-- Agregar Enlaces -->
+            <div class="card-box">
+                <h3>Agregar Nuevo Enlace</h3>
                 <div class="form-group">
                     <label>Título del Botón</label>
-                    <input type="text" id="link-title" class="form-control" placeholder="WhatsApp Oficial">
+                    <input type="text" id="link-title" class="form-control" placeholder="WhatsApp / Catálogo">
                 </div>
                 <div class="form-group">
                     <label>URL o enlace</label>
                     <input type="text" id="link-url" class="form-control" placeholder="https://wa.me/...">
                 </div>
                 <div class="form-group">
-                    <label>Ícono (FontAwesome)</label>
-                    <input type="text" id="link-icon" class="form-control" value="fa-solid fa-link">
+                    <label>URL de Imagen para el botón (Opcional - deja vacío para usar ícono)</label>
+                    <input type="text" id="link-icon" class="form-control" placeholder="https://... (Foto o logo para el botón)">
                 </div>
                 <button class="btn btn-primary" onclick="addLink()">Guardar Enlace</button>
             </div>
 
+            <!-- Lista de Enlaces -->
             <div class="card-box">
-                <h3 style="font-size: 1rem; margin-bottom: 12px;">Tus Enlaces Activos</h3>
+                <h3 style="margin-bottom: 12px;">Tus Enlaces Activos</h3>
                 <div id="admin-links-list"></div>
+            </div>
+
+            <!-- VISTA PREVIA EN VIVO AL FINAL -->
+            <div class="card-box" style="border: 2px dashed rgba(56,189,248,0.4);">
+                <h3 style="text-align: center; margin-bottom: 15px; color: var(--accent-color);">Vista Previa en Vivo</h3>
+                <div id="preview-container" style="display: flex; flex-direction: column; align-items: center; width: 100%;">
+                    <!-- Se renderiza la vista previa interactiva aquí -->
+                </div>
             </div>
         </div>
 
@@ -408,6 +482,14 @@
             document.getElementById('switch-link').textContent = isRegistering ? 'Inicia sesión' : 'Regístrate aquí';
         }
 
+        function applyTheme(themeName) {
+            const body = document.getElementById('page-body');
+            body.className = '';
+            if (themeName && themeName !== 'default') {
+                body.classList.add(`theme-${themeName}`);
+            }
+        }
+
         async function handleAuth() {
             if (!supabaseClient) {
                 showAlert('Error al conectar con Supabase.');
@@ -432,7 +514,7 @@
                 if (error) { showAlert(error.message); return; }
 
                 if (data.user) {
-                    await supabaseClient.from('profiles').insert([{ id: data.user.id, username, full_name: username }]);
+                    await supabaseClient.from('profiles').insert([{ id: data.user.id, username, full_name: username, theme: 'default' }]);
                     showAlert('¡Cuenta creada con éxito! Ya puedes iniciar sesión.', 'success');
                     toggleAuthMode();
                 }
@@ -452,10 +534,9 @@
         }
 
         async function loadUserDataAndLinks() {
-            // Obtener el username del perfil del usuario logueado
             const { data: profile } = await supabaseClient
                 .from('profiles')
-                .select('username')
+                .select('*')
                 .eq('id', currentUser.id)
                 .single();
 
@@ -464,9 +545,37 @@
                 const fullShareUrl = `${baseUrl}?u=${profile.username}`;
                 document.getElementById('share-link-input').value = fullShareUrl;
                 document.getElementById('share-link-btn').href = fullShareUrl;
+
+                document.getElementById('profile-fullname').value = profile.full_name || '';
+                document.getElementById('profile-bio').value = profile.bio || '';
+                document.getElementById('profile-avatar').value = profile.avatar_url || '';
+                document.getElementById('profile-theme').value = profile.theme || 'default';
+
+                applyTheme(profile.theme);
+                renderLivePreview(profile);
             }
 
             loadAdminLinks();
+        }
+
+        async function saveProfileChanges() {
+            const full_name = document.getElementById('profile-fullname').value;
+            const bio = document.getElementById('profile-bio').value;
+            const avatar_url = document.getElementById('profile-avatar').value;
+            const theme = document.getElementById('profile-theme').value;
+
+            const { error } = await supabaseClient
+                .from('profiles')
+                .update({ full_name, bio, avatar_url, theme })
+                .eq('id', currentUser.id);
+
+            if (!error) {
+                applyTheme(theme);
+                loadUserDataAndLinks();
+                alert('¡Perfil actualizado con éxito!');
+            } else {
+                alert('Error al actualizar el perfil.');
+            }
         }
 
         async function loadPublicProfile(username) {
@@ -483,9 +592,17 @@
                 return;
             }
 
+            applyTheme(profile.theme);
+
             document.getElementById('pub-name').textContent = profile.full_name || profile.username;
-            document.getElementById('pub-bio').textContent = profile.bio || 'Enlaces oficiales.';
-            document.getElementById('pub-avatar').textContent = profile.username.substring(0, 2).toUpperCase();
+            document.getElementById('pub-bio').textContent = profile.bio || '';
+
+            const avatarContainer = document.getElementById('pub-avatar-container');
+            if (profile.avatar_url) {
+                avatarContainer.innerHTML = `<img src="${profile.avatar_url}" class="avatar" alt="Avatar">`;
+            } else {
+                avatarContainer.innerHTML = `<div class="avatar">${profile.username.substring(0, 2).toUpperCase()}</div>`;
+            }
 
             const { data: links } = await supabaseClient
                 .from('links')
@@ -498,10 +615,17 @@
 
             if (links && links.length > 0) {
                 links.forEach(link => {
+                    let iconHtml = `<i class="fa-solid fa-link"></i>`;
+                    if (link.icon && link.icon.startsWith('http')) {
+                        iconHtml = `<img src="${link.icon}" class="link-thumb">`;
+                    } else if (link.icon) {
+                        iconHtml = `<i class="${link.icon}"></i>`;
+                    }
+
                     linksContainer.innerHTML += `
                         <a href="${link.url}" target="_blank" class="link-card">
                             <div class="link-content">
-                                <i class="${link.icon || 'fa-solid fa-link'}"></i>
+                                ${iconHtml}
                                 <span>${link.title}</span>
                             </div>
                             <i class="fa-solid fa-arrow-right" style="font-size:0.85rem; color:var(--text-secondary);"></i>
@@ -511,6 +635,50 @@
             } else {
                 linksContainer.innerHTML = '<p style="text-align:center; color:var(--text-secondary);">No hay enlaces disponibles aún.</p>';
             }
+        }
+
+        async function renderLivePreview(profile) {
+            const { data: links } = await supabaseClient
+                .from('links')
+                .select('*')
+                .eq('user_id', currentUser.id)
+                .order('position', { ascending: true });
+
+            let previewHtml = `
+                <div style="text-align:center; margin-bottom: 15px;">
+                    <div style="width: 70px; height: 70px; margin: 0 auto 10px; border-radius: 50%; overflow:hidden; background:#1e293b; display:flex; align-items:center; justify-content:center;">
+                        ${profile.avatar_url ? `<img src="${profile.avatar_url}" style="width:100%; height:100%; object-fit:cover;">` : `<span style="color:var(--accent-color); font-weight:700;">${profile.username.substring(0,2).toUpperCase()}</span>`}
+                    </div>
+                    <h4 style="font-size:1.1rem;">${profile.full_name || profile.username}</h4>
+                    <p style="font-size:0.8rem; color:var(--text-secondary);">${profile.bio || ''}</p>
+                </div>
+                <div style="width:100%; display:flex; flex-direction:column; gap:10px;">
+            `;
+
+            if (links && links.length > 0) {
+                links.forEach(link => {
+                    let iconDisplay = `<i class="fa-solid fa-link" style="color:var(--accent-color);"></i>`;
+                    if (link.icon && link.icon.startsWith('http')) {
+                        iconDisplay = `<img src="${link.icon}" style="width:20px; height:20px; border-radius:50%; object-fit:cover;">`;
+                    } else if (link.icon) {
+                        iconDisplay = `<i class="${link.icon}" style="color:var(--accent-color);"></i>`;
+                    }
+
+                    previewHtml += `
+                        <div style="background:var(--card-bg); padding:10px 15px; border-radius:10px; display:flex; justify-content:space-between; align-items:center; border:1px solid rgba(255,255,255,0.05); font-size:0.85rem;">
+                            <div style="display:flex; align-items:center; gap:10px;">
+                                ${iconDisplay}
+                                <span>${link.title}</span>
+                            </div>
+                        </div>
+                    `;
+                });
+            } else {
+                previewHtml += `<p style="text-align:center; font-size:0.8rem; color:var(--text-secondary);">Sin enlaces agregados aún.</p>`;
+            }
+            previewHtml += `</div>`;
+
+            document.getElementById('preview-container').innerHTML = previewHtml;
         }
 
         async function loadAdminLinks() {
@@ -538,6 +706,9 @@
             } else {
                 container.innerHTML = '<p style="font-size:0.85rem; color:var(--text-secondary);">Aún no has agregado enlaces.</p>';
             }
+
+            const { data: profile } = await supabaseClient.from('profiles').select('*').eq('id', currentUser.id).single();
+            if(profile) renderLivePreview(profile);
         }
 
         async function addLink() {
@@ -554,13 +725,14 @@
                 user_id: currentUser.id,
                 title,
                 url,
-                icon,
+                icon: icon || 'fa-solid fa-link',
                 position: Date.now()
             }]);
 
             if (!error) {
                 document.getElementById('link-title').value = '';
                 document.getElementById('link-url').value = '';
+                document.getElementById('link-icon').value = '';
                 loadAdminLinks();
             } else {
                 alert('Error al guardar el enlace.');
