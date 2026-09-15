@@ -158,15 +158,16 @@
             width: 100%;
             backdrop-filter: blur(12px);
             box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+            margin-bottom: 20px;
         }
 
-        .card-box h2 {
-            margin-bottom: 20px;
-            font-size: 1.25rem;
+        .card-box h2, .card-box h3 {
+            margin-bottom: 15px;
+            font-size: 1.1rem;
         }
 
         .form-group {
-            margin-bottom: 16px;
+            margin-bottom: 14px;
             width: 100%;
         }
 
@@ -202,6 +203,9 @@
             font-size: 0.95rem;
             cursor: pointer;
             transition: opacity 0.2s, transform 0.2s;
+            text-align: center;
+            text-decoration: none;
+            display: inline-block;
         }
 
         .btn-primary {
@@ -275,7 +279,7 @@
             </div>
             <div class="links-list" id="pub-links"></div>
             <div style="margin-top: 20px; font-size: 0.8rem; color: var(--text-secondary);">
-                Crea tu propia página en <a onclick="showView('auth-view')" style="color: var(--accent-color);">PeeoLinks</a>
+                Crea tu propia página en <a onclick="showView('auth-view')" style="color: var(--accent-color); cursor:pointer;">PeeoLinks</a>
             </div>
         </div>
 
@@ -314,8 +318,15 @@
                 <button class="btn btn-danger" onclick="logout()">Cerrar Sesión</button>
             </div>
 
-            <div class="card-box" style="margin-bottom: 20px;">
-                <h3 style="font-size: 1rem; margin-bottom: 12px;">Agregar Nuevo Enlace</h3>
+            <!-- Caja con el Link Personalizado -->
+            <div class="card-box" style="border-color: rgba(56, 189, 248, 0.3);">
+                <h3 style="font-size: 0.95rem; color: var(--accent-color); margin-bottom: 8px;"><i class="fa-solid fa-share-nodes"></i> Tu Enlace Público:</h3>
+                <input type="text" id="share-link-input" class="form-control" readonly style="margin-bottom: 10px; font-size: 0.85rem; background: rgba(0,0,0,0.3);" onclick="this.select()">
+                <a id="share-link-btn" href="#" target="_blank" class="btn btn-primary" style="font-size: 0.85rem; padding: 10px;">Ver mi página pública</a>
+            </div>
+
+            <div class="card-box">
+                <h3 style="font-size: 1rem;">Agregar Nuevo Enlace</h3>
                 <div class="form-group">
                     <label>Título del Botón</label>
                     <input type="text" id="link-title" class="form-control" placeholder="WhatsApp Oficial">
@@ -340,7 +351,6 @@
     </div>
 
     <script>
-        // Credenciales configuradas correctamente
         const SUPABASE_URL = 'https://vvupsijdebwvhfiwqjdy.supabase.co';
         const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZ2dXBzaWpkZWJ3dmhmaXdxamR5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODk0MzE4NDYsImV4cCI6MjEwNTAwNzg0Nn0.8OT8tJOuNaPJZt4Ni9Yg0vYnJcRlCvmmC_KlG-ZsLwE';
         
@@ -366,7 +376,7 @@
                     if (session) {
                         currentUser = session.user;
                         showView('admin-view');
-                        loadAdminLinks();
+                        loadUserDataAndLinks();
                     } else {
                         showView('auth-view');
                     }
@@ -432,13 +442,31 @@
                 
                 currentUser = data.user;
                 showView('admin-view');
-                loadAdminLinks();
+                loadUserDataAndLinks();
             }
         }
 
         async function logout() {
             await supabaseClient.auth.signOut();
             window.location.href = window.location.pathname;
+        }
+
+        async function loadUserDataAndLinks() {
+            // Obtener el username del perfil del usuario logueado
+            const { data: profile } = await supabaseClient
+                .from('profiles')
+                .select('username')
+                .eq('id', currentUser.id)
+                .single();
+
+            if (profile) {
+                const baseUrl = window.location.origin + window.location.pathname;
+                const fullShareUrl = `${baseUrl}?u=${profile.username}`;
+                document.getElementById('share-link-input').value = fullShareUrl;
+                document.getElementById('share-link-btn').href = fullShareUrl;
+            }
+
+            loadAdminLinks();
         }
 
         async function loadPublicProfile(username) {
