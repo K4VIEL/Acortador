@@ -21,33 +21,6 @@
             --success: #22c55e;
         }
 
-        /* Temas personalizados */
-        body.theme-neon {
-            --bg-color: #050505;
-            --card-bg: rgba(20, 20, 20, 0.8);
-            --card-hover: rgba(40, 40, 40, 0.9);
-            --accent-color: #22c55e;
-            --accent-gradient: linear-gradient(135deg, #22c55e 0%, #38bdf8 100%);
-        }
-
-        body.theme-sunset {
-            --bg-color: #1e1b4b;
-            --card-bg: rgba(49, 46, 129, 0.5);
-            --card-hover: rgba(67, 56, 202, 0.7);
-            --accent-color: #f43f5e;
-            --accent-gradient: linear-gradient(135deg, #f43f5e 0%, #fb923c 100%);
-        }
-
-        body.theme-light {
-            --bg-color: #f8fafc;
-            --card-bg: rgba(255, 255, 255, 0.9);
-            --card-hover: rgba(241, 245, 249, 1);
-            --text-primary: #0f172a;
-            --text-secondary: #64748b;
-            --accent-color: #2563eb;
-            --accent-gradient: linear-gradient(135deg, #2563eb 0%, #7c3aed 100%);
-        }
-
         * {
             margin: 0;
             padding: 0;
@@ -57,16 +30,13 @@
 
         body {
             background-color: var(--bg-color);
-            background-image: 
-                radial-gradient(at 0% 0%, rgba(56, 189, 248, 0.1) 0px, transparent 50%),
-                radial-gradient(at 100% 100%, rgba(129, 140, 248, 0.1) 0px, transparent 50%);
             color: var(--text-primary);
             min-height: 100vh;
             display: flex;
             justify-content: center;
             align-items: center;
             padding: 20px;
-            transition: background 0.3s ease;
+            transition: background 0.3s ease, color 0.3s ease;
         }
 
         .container {
@@ -124,6 +94,7 @@
             font-size: 1.5rem;
             font-weight: 700;
             margin-bottom: 6px;
+            color: var(--text-primary);
         }
 
         .bio {
@@ -162,7 +133,7 @@
         .link-card:hover {
             background: var(--card-hover);
             transform: translateY(-3px);
-            border-color: rgba(56, 189, 248, 0.3);
+            border-color: var(--accent-color);
         }
 
         .link-content {
@@ -199,6 +170,7 @@
         .card-box h3 {
             margin-bottom: 15px;
             font-size: 1.1rem;
+            color: var(--text-primary);
         }
 
         .form-group {
@@ -227,6 +199,31 @@
 
         .form-control:focus {
             border-color: var(--accent-color);
+        }
+
+        .color-picker-row {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+
+        .color-picker-row input[type="color"] {
+            -webkit-appearance: none;
+            border: none;
+            width: 45px;
+            height: 42px;
+            border-radius: 10px;
+            cursor: pointer;
+            background: none;
+        }
+
+        .color-picker-row input[type="color"]::-webkit-color-swatch-wrapper {
+            padding: 0;
+        }
+
+        .color-picker-row input[type="color"]::-webkit-color-swatch {
+            border: 1px solid rgba(255,255,255,0.2);
+            border-radius: 10px;
         }
 
         .btn {
@@ -306,7 +303,7 @@
         <!-- VISTA 1: PÁGINA PÚBLICA -->
         <div id="public-view" class="view">
             <div class="profile-header">
-                <div class="avatar-container">
+                <div class="avatar-container" id="pub-avatar-border">
                     <div class="avatar" id="pub-avatar-container">
                         <span id="pub-avatar-text">VP</span>
                     </div>
@@ -362,9 +359,9 @@
                 <a id="share-link-btn" href="#" target="_blank" class="btn btn-primary" style="font-size: 0.85rem; padding: 10px;">Ver mi página pública</a>
             </div>
 
-            <!-- Personalizar Perfil y Tema -->
+            <!-- Personalización Libre de Colores y Estilos -->
             <div class="card-box">
-                <h3>Personalizar Perfil y Tema</h3>
+                <h3>Personalización Libre Total</h3>
                 <div class="form-group">
                     <label>Nombre a mostrar</label>
                     <input type="text" id="profile-fullname" class="form-control" placeholder="Variedades Peeo">
@@ -374,19 +371,43 @@
                     <input type="text" id="profile-bio" class="form-control" placeholder="Tu tienda de confianza...">
                 </div>
                 <div class="form-group">
-                    <label>URL de tu Foto de Perfil / Logo (Ej: enlace de imagen)</label>
-                    <input type="text" id="profile-avatar" class="form-control" placeholder="https://... o link de foto">
+                    <label>URL de tu Foto de Perfil / Logo</label>
+                    <input type="text" id="profile-avatar" class="form-control" placeholder="https://...">
                 </div>
+
                 <div class="form-group">
-                    <label>Seleccionar Tema y Estilo</label>
-                    <select id="profile-theme" class="form-control">
-                        <option value="default">Oscuro Moderno (Azul)</option>
-                        <option value="neon">Neón Gamer (Verde/Negro)</option>
-                        <option value="sunset">Sunset Atardecer (Morado/Naranja)</option>
-                        <option value="light">Claro Minimalista (Blanco)</option>
-                    </select>
+                    <label>Color de Fondo de la Página</label>
+                    <div class="color-picker-row">
+                        <input type="color" id="bg-color-picker" value="#0f172a">
+                        <input type="text" id="bg-color-text" class="form-control" value="#0f172a">
+                    </div>
                 </div>
-                <button class="btn btn-primary" onclick="saveProfileChanges()">Guardar Cambios de Perfil</button>
+
+                <div class="form-group">
+                    <label>Color de Fondo de los Botones / Tarjetas</label>
+                    <div class="color-picker-row">
+                        <input type="color" id="card-bg-picker" value="#1e293b">
+                        <input type="text" id="card-bg-text" class="form-control" value="#1e293b">
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label>Color del Texto y Letras</label>
+                    <div class="color-picker-row">
+                        <input type="color" id="text-color-picker" value="#f8fafc">
+                        <input type="text" id="text-color-text" class="form-control" value="#f8fafc">
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label>Color de Acento (Bordes, íconos y detalles)</label>
+                    <div class="color-picker-row">
+                        <input type="color" id="accent-color-picker" value="#38bdf8">
+                        <input type="text" id="accent-color-text" class="form-control" value="#38bdf8">
+                    </div>
+                </div>
+
+                <button class="btn btn-primary" onclick="saveProfileChanges()">Guardar Colores y Perfil</button>
             </div>
 
             <!-- Agregar Enlaces -->
@@ -401,8 +422,8 @@
                     <input type="text" id="link-url" class="form-control" placeholder="https://wa.me/...">
                 </div>
                 <div class="form-group">
-                    <label>URL de Imagen para el botón (Opcional - deja vacío para usar ícono)</label>
-                    <input type="text" id="link-icon" class="form-control" placeholder="https://... (Foto o logo para el botón)">
+                    <label>URL de Imagen o Ícono para el Botón (Opcional)</label>
+                    <input type="text" id="link-icon" class="form-control" placeholder="https://... o fa-brands fa-whatsapp">
                 </div>
                 <button class="btn btn-primary" onclick="addLink()">Guardar Enlace</button>
             </div>
@@ -414,11 +435,9 @@
             </div>
 
             <!-- VISTA PREVIA EN VIVO AL FINAL -->
-            <div class="card-box" style="border: 2px dashed rgba(56,189,248,0.4);">
-                <h3 style="text-align: center; margin-bottom: 15px; color: var(--accent-color);">Vista Previa en Vivo</h3>
-                <div id="preview-container" style="display: flex; flex-direction: column; align-items: center; width: 100%;">
-                    <!-- Se renderiza la vista previa interactiva aquí -->
-                </div>
+            <div class="card-box" id="preview-wrapper" style="border: 2px dashed rgba(56,189,248,0.4); transition: all 0.3s;">
+                <h3 style="text-align: center; margin-bottom: 15px;" id="preview-title-text">Vista Previa en Vivo</h3>
+                <div id="preview-container" style="display: flex; flex-direction: column; align-items: center; width: 100%;"></div>
             </div>
         </div>
 
@@ -437,6 +456,14 @@
 
         let isRegistering = false;
         let currentUser = null;
+
+        // Sincronizar selectores de color con campos de texto
+        ['bg-color', 'card-bg', 'text-color', 'accent-color'].forEach(id => {
+            const picker = document.getElementById(`${id}-picker`);
+            const text = document.getElementById(`${id}-text`);
+            picker.addEventListener('input', (e) => { text.value = e.target.value; updateDynamicThemePreview(); });
+            text.addEventListener('input', (e) => { if(e.target.value.length === 7) { picker.value = e.target.value; updateDynamicThemePreview(); } });
+        });
 
         window.addEventListener('DOMContentLoaded', async () => {
             const urlParams = new URLSearchParams(window.location.search);
@@ -482,12 +509,23 @@
             document.getElementById('switch-link').textContent = isRegistering ? 'Inicia sesión' : 'Regístrate aquí';
         }
 
-        function applyTheme(themeName) {
-            const body = document.getElementById('page-body');
-            body.className = '';
-            if (themeName && themeName !== 'default') {
-                body.classList.add(`theme-${themeName}`);
-            }
+        function applyCustomTheme(bg, cardBg, text, accent) {
+            document.documentElement.style.setProperty('--bg-color', bg || '#0f172a');
+            document.documentElement.style.setProperty('--card-bg', cardBg || '#1e293b');
+            document.documentElement.style.setProperty('--card-hover', cardBg || '#334155');
+            document.documentElement.style.setProperty('--text-primary', text || '#f8fafc');
+            document.documentElement.style.setProperty('--accent-color', accent || '#38bdf8');
+            document.documentElement.style.setProperty('--accent-gradient', `linear-gradient(135deg, ${accent || '#38bdf8'} 0%, #818cf8 100%)`);
+            document.body.style.backgroundColor = bg || '#0f172a';
+            document.body.style.color = text || '#f8fafc';
+        }
+
+        function updateDynamicThemePreview() {
+            const bg = document.getElementById('bg-color-text').value;
+            const cardBg = document.getElementById('card-bg-text').value;
+            const text = document.getElementById('text-color-text').value;
+            const accent = document.getElementById('accent-color-text').value;
+            applyCustomTheme(bg, cardBg, text, accent);
         }
 
         async function handleAuth() {
@@ -514,7 +552,7 @@
                 if (error) { showAlert(error.message); return; }
 
                 if (data.user) {
-                    await supabaseClient.from('profiles').insert([{ id: data.user.id, username, full_name: username, theme: 'default' }]);
+                    await supabaseClient.from('profiles').insert([{ id: data.user.id, username, full_name: username }]);
                     showAlert('¡Cuenta creada con éxito! Ya puedes iniciar sesión.', 'success');
                     toggleAuthMode();
                 }
@@ -549,9 +587,25 @@
                 document.getElementById('profile-fullname').value = profile.full_name || '';
                 document.getElementById('profile-bio').value = profile.bio || '';
                 document.getElementById('profile-avatar').value = profile.avatar_url || '';
-                document.getElementById('profile-theme').value = profile.theme || 'default';
 
-                applyTheme(profile.theme);
+                if(profile.bg_color) {
+                    document.getElementById('bg-color-picker').value = profile.bg_color;
+                    document.getElementById('bg-color-text').value = profile.bg_color;
+                }
+                if(profile.card_bg) {
+                    document.getElementById('card-bg-picker').value = profile.card_bg;
+                    document.getElementById('card-bg-text').value = profile.card_bg;
+                }
+                if(profile.text_color) {
+                    document.getElementById('text-color-picker').value = profile.text_color;
+                    document.getElementById('text-color-text').value = profile.text_color;
+                }
+                if(profile.accent_color) {
+                    document.getElementById('accent-color-picker').value = profile.accent_color;
+                    document.getElementById('accent-color-text').value = profile.accent_color;
+                }
+
+                applyCustomTheme(profile.bg_color, profile.card_bg, profile.text_color, profile.accent_color);
                 renderLivePreview(profile);
             }
 
@@ -562,19 +616,22 @@
             const full_name = document.getElementById('profile-fullname').value;
             const bio = document.getElementById('profile-bio').value;
             const avatar_url = document.getElementById('profile-avatar').value;
-            const theme = document.getElementById('profile-theme').value;
+            const bg_color = document.getElementById('bg-color-text').value;
+            const card_bg = document.getElementById('card-bg-text').value;
+            const text_color = document.getElementById('text-color-text').value;
+            const accent_color = document.getElementById('accent-color-text').value;
 
             const { error } = await supabaseClient
                 .from('profiles')
-                .update({ full_name, bio, avatar_url, theme })
+                .update({ full_name, bio, avatar_url, bg_color, card_bg, text_color, accent_color })
                 .eq('id', currentUser.id);
 
             if (!error) {
-                applyTheme(theme);
+                applyCustomTheme(bg_color, card_bg, text_color, accent_color);
                 loadUserDataAndLinks();
-                alert('¡Perfil actualizado con éxito!');
+                alert('¡Colores y perfil guardados con éxito!');
             } else {
-                alert('Error al actualizar el perfil.');
+                alert('Error al actualizar los colores.');
             }
         }
 
@@ -592,7 +649,7 @@
                 return;
             }
 
-            applyTheme(profile.theme);
+            applyCustomTheme(profile.bg_color, profile.card_bg, profile.text_color, profile.accent_color);
 
             document.getElementById('pub-name').textContent = profile.full_name || profile.username;
             document.getElementById('pub-bio').textContent = profile.bio || '';
@@ -615,20 +672,20 @@
 
             if (links && links.length > 0) {
                 links.forEach(link => {
-                    let iconHtml = `<i class="fa-solid fa-link"></i>`;
+                    let iconHtml = `<i class="fa-solid fa-link" style="color:${profile.accent_color || '#38bdf8'}"></i>`;
                     if (link.icon && link.icon.startsWith('http')) {
                         iconHtml = `<img src="${link.icon}" class="link-thumb">`;
                     } else if (link.icon) {
-                        iconHtml = `<i class="${link.icon}"></i>`;
+                        iconHtml = `<i class="${link.icon}" style="color:${profile.accent_color || '#38bdf8'}"></i>`;
                     }
 
                     linksContainer.innerHTML += `
-                        <a href="${link.url}" target="_blank" class="link-card">
+                        <a href="${link.url}" target="_blank" class="link-card" style="background:${profile.card_bg || 'rgba(30,41,59,0.7)'}; color:${profile.text_color || '#f8fafc'};">
                             <div class="link-content">
                                 ${iconHtml}
                                 <span>${link.title}</span>
                             </div>
-                            <i class="fa-solid fa-arrow-right" style="font-size:0.85rem; color:var(--text-secondary);"></i>
+                            <i class="fa-solid fa-arrow-right" style="font-size:0.85rem; color:${profile.text_color || '#94a3b8'};"></i>
                         </a>
                     `;
                 });
@@ -644,28 +701,37 @@
                 .eq('user_id', currentUser.id)
                 .order('position', { ascending: true });
 
+            const bg = profile.bg_color || '#0f172a';
+            const cardBg = profile.card_bg || '#1e293b';
+            const textCol = profile.text_color || '#f8fafc';
+            const accentCol = profile.accent_color || '#38bdf8';
+
+            const previewWrapper = document.getElementById('preview-wrapper');
+            previewWrapper.style.backgroundColor = bg;
+            previewWrapper.style.color = textCol;
+
             let previewHtml = `
                 <div style="text-align:center; margin-bottom: 15px;">
-                    <div style="width: 70px; height: 70px; margin: 0 auto 10px; border-radius: 50%; overflow:hidden; background:#1e293b; display:flex; align-items:center; justify-content:center;">
-                        ${profile.avatar_url ? `<img src="${profile.avatar_url}" style="width:100%; height:100%; object-fit:cover;">` : `<span style="color:var(--accent-color); font-weight:700;">${profile.username.substring(0,2).toUpperCase()}</span>`}
+                    <div style="width: 70px; height: 70px; margin: 0 auto 10px; border-radius: 50%; overflow:hidden; background:${cardBg}; border: 2px solid ${accentCol}; display:flex; align-items:center; justify-content:center;">
+                        ${profile.avatar_url ? `<img src="${profile.avatar_url}" style="width:100%; height:100%; object-fit:cover;">` : `<span style="color:${accentCol}; font-weight:700;">${profile.username.substring(0,2).toUpperCase()}</span>`}
                     </div>
-                    <h4 style="font-size:1.1rem;">${profile.full_name || profile.username}</h4>
-                    <p style="font-size:0.8rem; color:var(--text-secondary);">${profile.bio || ''}</p>
+                    <h4 style="font-size:1.1rem; color:${textCol};">${profile.full_name || profile.username}</h4>
+                    <p style="font-size:0.8rem; color:${textCol}; opacity: 0.8;">${profile.bio || ''}</p>
                 </div>
                 <div style="width:100%; display:flex; flex-direction:column; gap:10px;">
             `;
 
             if (links && links.length > 0) {
                 links.forEach(link => {
-                    let iconDisplay = `<i class="fa-solid fa-link" style="color:var(--accent-color);"></i>`;
+                    let iconDisplay = `<i class="fa-solid fa-link" style="color:${accentCol};"></i>`;
                     if (link.icon && link.icon.startsWith('http')) {
                         iconDisplay = `<img src="${link.icon}" style="width:20px; height:20px; border-radius:50%; object-fit:cover;">`;
                     } else if (link.icon) {
-                        iconDisplay = `<i class="${link.icon}" style="color:var(--accent-color);"></i>`;
+                        iconDisplay = `<i class="${link.icon}" style="color:${accentCol};"></i>`;
                     }
 
                     previewHtml += `
-                        <div style="background:var(--card-bg); padding:10px 15px; border-radius:10px; display:flex; justify-content:space-between; align-items:center; border:1px solid rgba(255,255,255,0.05); font-size:0.85rem;">
+                        <div style="background:${cardBg}; color:${textCol}; padding:10px 15px; border-radius:10px; display:flex; justify-content:space-between; align-items:center; border:1px solid rgba(255,255,255,0.05); font-size:0.85rem;">
                             <div style="display:flex; align-items:center; gap:10px;">
                                 ${iconDisplay}
                                 <span>${link.title}</span>
@@ -674,7 +740,7 @@
                     `;
                 });
             } else {
-                previewHtml += `<p style="text-align:center; font-size:0.8rem; color:var(--text-secondary);">Sin enlaces agregados aún.</p>`;
+                previewHtml += `<p style="text-align:center; font-size:0.8rem; opacity:0.7;">Sin enlaces agregados aún.</p>`;
             }
             previewHtml += `</div>`;
 
@@ -746,4 +812,3 @@
     </script>
 </body>
 </html>
-
