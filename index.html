@@ -539,7 +539,7 @@
 
             const { data, error } = await supabaseClient.storage.from('uploads').upload(filePath, file);
             if (error) {
-                alert('Error al subir imagen al Storage: ' + error.message);
+                alert('Error al subir imagen: ' + error.message);
                 return null;
             }
 
@@ -610,13 +610,21 @@
         async function saveProfileChanges() {
             if (!currentUser) return;
             
-            // Subir foto de perfil desde archivo si se seleccionó uno
-            let uploadedAvatar = await uploadFileToSupabase('file-avatar');
-            let avatar_url = uploadedAvatar || document.getElementById('profile-avatar').value.trim();
+            // Subir archivo de avatar si existe, si no, tomar la URL escrita
+            let avatar_url = document.getElementById('profile-avatar').value.trim();
+            const uploadedAvatar = await uploadFileToSupabase('file-avatar');
+            if (uploadedAvatar) {
+                avatar_url = uploadedAvatar;
+                document.getElementById('profile-avatar').value = uploadedAvatar;
+            }
 
-            // Subir fondo desde archivo si se seleccionó uno
-            let uploadedBg = await uploadFileToSupabase('file-bg');
-            let bg_image = uploadedBg || document.getElementById('profile-bg-image').value.trim();
+            // Subir archivo de fondo si existe, si no, tomar la URL escrita
+            let bg_image = document.getElementById('profile-bg-image').value.trim();
+            const uploadedBg = await uploadFileToSupabase('file-bg');
+            if (uploadedBg) {
+                bg_image = uploadedBg;
+                document.getElementById('profile-bg-image').value = uploadedBg;
+            }
 
             const full_name = document.getElementById('profile-fullname').value;
             const bio = document.getElementById('profile-bio').value;
@@ -625,10 +633,6 @@
             const card_bg = document.getElementById('card-bg-text').value;
             const text_color = document.getElementById('text-color-text').value;
             const accent_color = document.getElementById('accent-color-text').value;
-
-            // Actualizar inputs visuales inmediatamente
-            if (uploadedAvatar) document.getElementById('profile-avatar').value = uploadedAvatar;
-            if (uploadedBg) document.getElementById('profile-bg-image').value = uploadedBg;
 
             const { error } = await supabaseClient
                 .from('profiles')
@@ -780,8 +784,9 @@
 
             if (!title || !url) { alert('El título y la URL son obligatorios.'); return; }
 
-            let uploadedIcon = await uploadFileToSupabase('file-link-icon');
-            let icon = uploadedIcon || document.getElementById('link-icon').value.trim() || 'fa-solid fa-link';
+            let icon = document.getElementById('link-icon').value.trim() || 'fa-solid fa-link';
+            const uploadedIcon = await uploadFileToSupabase('file-link-icon');
+            if (uploadedIcon) icon = uploadedIcon;
 
             const { error } = await supabaseClient.from('links').insert([{
                 user_id: currentUser.id,
@@ -809,4 +814,3 @@
     </script>
 </body>
 </html>
-
