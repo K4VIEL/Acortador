@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -73,6 +74,7 @@
             justify-content: center;
             align-items: center;
             box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.3);
+            overflow: hidden;
         }
 
         .avatar {
@@ -609,11 +611,9 @@
         async function saveProfileChanges() {
             if (!currentUser) return;
             
-            // Intentar subir archivo de avatar, si no hay archivo, usar el texto escrito
             let uploadedAvatar = await uploadFileToSupabase('file-avatar');
             let avatar_url = uploadedAvatar || document.getElementById('profile-avatar').value.trim();
 
-            // Intentar subir archivo de fondo, si no hay archivo, usar el texto escrito
             let uploadedBg = await uploadFileToSupabase('file-bg');
             let bg_image = uploadedBg || document.getElementById('profile-bg-image').value.trim();
 
@@ -631,6 +631,9 @@
                 .eq('id', currentUser.id);
 
             if (!error) {
+                if(avatar_url) document.getElementById('profile-avatar').value = avatar_url;
+                if(bg_image) document.getElementById('profile-bg-image').value = bg_image;
+
                 applyStyles(bg_color, card_bg, text_color, accent_color, font_family, bg_image);
                 loadUserDataAndLinks();
                 alert('¡Estilo y fotos guardados con éxito!');
@@ -659,7 +662,7 @@
             if(profile.accent_color) avatarBorder.style.background = profile.accent_color;
 
             if (profile.avatar_url && profile.avatar_url.trim() !== '') {
-                avatarContainer.innerHTML = `<img src="${profile.avatar_url}" class="avatar">`;
+                avatarContainer.innerHTML = `<img src="${profile.avatar_url}" class="avatar" alt="Avatar">`;
             } else {
                 avatarContainer.innerHTML = `<div class="avatar" style="color:${profile.accent_color}">${profile.username.substring(0, 2).toUpperCase()}</div>`;
             }
@@ -804,4 +807,3 @@
     </script>
 </body>
 </html>
-
