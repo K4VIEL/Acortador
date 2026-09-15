@@ -1,0 +1,545 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PeeoLinks | Crea tu minisitio profesional</title>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- SDK de Supabase -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    
+    <style>
+        :root {
+            --bg-color: #0f172a;
+            --card-bg: rgba(30, 41, 59, 0.7);
+            --card-hover: rgba(51, 65, 85, 0.9);
+            --text-primary: #f8fafc;
+            --text-secondary: #94a3b8;
+            --accent-color: #38bdf8;
+            --accent-gradient: linear-gradient(135deg, #38bdf8 0%, #818cf8 100%);
+            --danger: #ef4444;
+            --success: #22c55e;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Plus Jakarta Sans', sans-serif;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            background-image: 
+                radial-gradient(at 0% 0%, rgba(56, 189, 248, 0.1) 0px, transparent 50%),
+                radial-gradient(at 100% 100%, rgba(129, 140, 248, 0.1) 0px, transparent 50%);
+            color: var(--text-primary);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 480px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        /* Vistas (Pública vs Panel) */
+        .view {
+            width: 100%;
+            display: none;
+        }
+        .view.active {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        /* Estilos Perfil Público */
+        .profile-header {
+            text-align: center;
+            margin-bottom: 30px;
+            width: 100%;
+        }
+
+        .avatar-container {
+            width: 100px;
+            height: 100px;
+            margin: 0 auto 16px;
+            border-radius: 50%;
+            padding: 3px;
+            background: var(--accent-gradient);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            box-shadow: 0 10px 25px -5px rgba(56, 189, 248, 0.3);
+        }
+
+        .avatar {
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            object-fit: cover;
+            background-color: #1e293b;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 2rem;
+            color: var(--accent-color);
+            font-weight: 700;
+        }
+
+        .title {
+            font-size: 1.5rem;
+            font-weight: 700;
+            margin-bottom: 6px;
+        }
+
+        .bio {
+            font-size: 0.95rem;
+            color: var(--text-secondary);
+            max-width: 360px;
+            margin: 0 auto;
+            line-height: 1.5;
+        }
+
+        .links-list {
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            gap: 14px;
+            margin-bottom: 30px;
+        }
+
+        .link-card {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            background: var(--card-bg);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(10px);
+            padding: 16px 20px;
+            border-radius: 14px;
+            color: var(--text-primary);
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 0.95rem;
+            transition: all 0.3s ease;
+        }
+
+        .link-card:hover {
+            background: var(--card-hover);
+            transform: translateY(-3px);
+            border-color: rgba(56, 189, 248, 0.3);
+        }
+
+        .link-content {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+        }
+
+        .link-content i {
+            font-size: 1.25rem;
+            color: var(--accent-color);
+            width: 24px;
+            text-align: center;
+        }
+
+        /* Paneles de Autenticación y Administración */
+        .card-box {
+            background: var(--card-bg);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            padding: 24px;
+            border-radius: 16px;
+            width: 100%;
+            backdrop-filter: blur(12px);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+        }
+
+        .card-box h2 {
+            margin-bottom: 20px;
+            font-size: 1.25rem;
+        }
+
+        .form-group {
+            margin-bottom: 16px;
+            width: 100%;
+        }
+
+        .form-group label {
+            display: block;
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+            margin-bottom: 6px;
+        }
+
+        .form-control {
+            width: 100%;
+            padding: 12px 16px;
+            background: rgba(15, 23, 42, 0.6);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+            color: var(--text-primary);
+            font-size: 0.95rem;
+            outline: none;
+            transition: border-color 0.2s;
+        }
+
+        .form-control:focus {
+            border-color: var(--accent-color);
+        }
+
+        .btn {
+            width: 100%;
+            padding: 12px;
+            border-radius: 10px;
+            border: none;
+            font-weight: 600;
+            font-size: 0.95rem;
+            cursor: pointer;
+            transition: opacity 0.2s, transform 0.2s;
+        }
+
+        .btn-primary {
+            background: var(--accent-gradient);
+            color: #0f172a;
+        }
+
+        .btn-primary:hover {
+            opacity: 0.9;
+            transform: translateY(-2px);
+        }
+
+        .btn-danger {
+            background: var(--danger);
+            color: white;
+            padding: 6px 12px;
+            width: auto;
+            font-size: 0.8rem;
+        }
+
+        .admin-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            width: 100%;
+            margin-bottom: 20px;
+        }
+
+        .link-item-admin {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: rgba(15, 23, 42, 0.4);
+            padding: 12px;
+            border-radius: 10px;
+            margin-bottom: 10px;
+            border: 1px solid rgba(255,255,255,0.05);
+        }
+
+        .alert {
+            padding: 10px;
+            border-radius: 8px;
+            margin-bottom: 15px;
+            font-size: 0.85rem;
+            display: none;
+        }
+        .alert.error { background: rgba(239, 68, 68, 0.2); color: #fca5a5; border: 1px solid var(--danger); }
+        .alert.success { background: rgba(34, 197, 94, 0.2); color: #86efac; border: 1px solid var(--success); }
+
+        .switch-auth {
+            text-align: center;
+            margin-top: 15px;
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+        }
+        .switch-auth a { color: var(--accent-color); text-decoration: none; font-weight: 600; }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        
+        <!-- VISTA 1: PÁGINA PÚBLICA DEL USUARIO -->
+        <div id="public-view" class="view">
+            <div class="profile-header">
+                <div class="avatar-container">
+                    <div class="avatar" id="pub-avatar">VP</div>
+                </div>
+                <h1 class="title" id="pub-name">Cargando...</h1>
+                <p class="bio" id="pub-bio"></p>
+            </div>
+            <div class="links-list" id="pub-links">
+                <!-- Se inyectan dinámicamente -->
+            </div>
+            <div style="margin-top: 20px; font-size: 0.8rem; color: var(--text-secondary);">
+                Creá tu propia página en <a href="#" onclick="showView('auth-view')" style="color: var(--accent-color);">PeeoLinks</a>
+            </div>
+        </div>
+
+        <!-- VISTA 2: LOGIN / REGISTRO -->
+        <div id="auth-view" class="view active">
+            <div class="card-box">
+                <h2 id="auth-title">Iniciar Sesión</h2>
+                <div id="auth-alert" class="alert"></div>
+                
+                <div class="form-group" id="group-username" style="display:none;">
+                    <label>Nombre de usuario (ej: variedadespeeo)</label>
+                    <input type="text" id="input-username" class="form-control" placeholder="tutienda">
+                </div>
+                <div class="form-group">
+                    <label>Correo Electrónico</label>
+                    <input type="email" id="input-email" class="form-control" placeholder="correo@ejemplo.com">
+                </div>
+                <div class="form-group">
+                    <label>Contraseña</label>
+                    <input type="password" id="input-password" class="form-control" placeholder="••••••••">
+                </div>
+                
+                <button class="btn btn-primary" id="auth-btn" onclick="handleAuth()">Entrar</button>
+                
+                <div class="switch-auth">
+                    <span id="switch-text">¿No tienes cuenta?</span> 
+                    <a href="#" id="switch-link" onclick="toggleAuthMode()">Regístrate aquí</a>
+                </div>
+            </div>
+        </div>
+
+        <!-- VISTA 3: PANEL DE ADMINISTRACIÓN -->
+        <div id="admin-view" class="view">
+            <div class="admin-header">
+                <h2>Panel de Control</h2>
+                <button class="btn btn-danger" onclick="logout()">Cerrar Sesión</button>
+            </div>
+
+            <div class="card-box" style="margin-bottom: 20px;">
+                <h3 style="font-size: 1rem; margin-bottom: 12px;">Agregar Nuevo Enlace o Número</h3>
+                <div class="form-group">
+                    <label>Título del Botón (Ej: WhatsApp, Catálogo)</label>
+                    <input type="text" id="link-title" class="form-control" placeholder="WhatsApp Oficial">
+                </div>
+                <div class="form-group">
+                    <label>URL o enlace (Ej: https://wa.me/593...)</label>
+                    <input type="text" id="link-url" class="form-control" placeholder="https://...">
+                </div>
+                <div class="form-group">
+                    <label>Ícono (FontAwesome class - Opcional)</label>
+                    <input type="text" id="link-icon" class="form-control" value="fa-solid fa-link" placeholder="fa-brands fa-whatsapp">
+                </div>
+                <button class="btn btn-primary" onclick="addLink()">Guardar Enlace</button>
+            </div>
+
+            <div class="card-box">
+                <h3 style="font-size: 1rem; margin-bottom: 12px;">Tus Enlaces Activos</h3>
+                <div id="admin-links-list">
+                    <!-- Se cargan los enlaces del usuario -->
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <script>
+        // CONFIGURA TUS CREDENCIALES DE SUPABASE AQUÍ
+        const SUPABASE_URL = 'TUS_SUPABASE_URL';
+        const SUPABASE_ANON_KEY = 'TUS_SUPABASE_ANON_KEY';
+        const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+        let isRegistering = false;
+        let currentUser = null;
+
+        // Inicialización al cargar la página
+        window.addEventListener('DOMContentLoaded', async () => {
+            const urlParams = new URLSearchParams(window.location.search);
+            const usernameParam = urlParams.get('u');
+
+            if (usernameParam) {
+                loadPublicProfile(usernameParam);
+            } else {
+                const { data: { session } } = await supabaseClient.auth.getSession();
+                if (session) {
+                    currentUser = session.user;
+                    showView('admin-view');
+                    loadAdminLinks();
+                } else {
+                    showView('auth-view');
+                }
+            }
+        });
+
+        function showView(viewId) {
+            document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+            document.getElementById(viewId).classList.add('active');
+        }
+
+        function showAlert(message, type = 'error') {
+            const alertBox = document.getElementById('auth-alert');
+            alertBox.textContent = message;
+            alertBox.className = `alert ${type}`;
+            alertBox.style.display = 'block';
+            setTimeout(() => alertBox.style.display = 'none', 4000);
+        }
+
+        function toggleAuthMode() {
+            isRegistering = !isRegistering;
+            document.getElementById('auth-title').textContent = isRegistering ? 'Crear Cuenta' : 'Iniciar Sesión';
+            document.getElementById('auth-btn').textContent = isRegistering ? 'Registrarse' : 'Entrar';
+            document.getElementById('group-username').style.display = isRegistering ? 'block' : 'none';
+            document.getElementById('switch-text').textContent = isRegistering ? '¿Ya tienes cuenta?' : '¿No tienes cuenta?';
+            document.getElementById('switch-link').textContent = isRegistering ? 'Inicia sesión' : 'Regístrate aquí';
+        }
+
+        async function handleAuth() {
+            const email = document.getElementById('input-email').value;
+            const password = document.getElementById('input-password').value;
+            const username = document.getElementById('input-username').value.trim().toLowerCase();
+
+            if (!email || !password) {
+                showAlert('Por favor completa todos los campos.');
+                return;
+            }
+
+            if (isRegistering) {
+                if (!username) {
+                    showAlert('El nombre de usuario es obligatorio.');
+                    return;
+                }
+                const { data, error } = await supabaseClient.auth.signUp({ email, password });
+                if (error) { showAlert(error.message); return; }
+
+                if (data.user) {
+                    await supabaseClient.from('profiles').insert([{ id: data.user.id, username, full_name: username }]);
+                    showAlert('¡Cuenta creada con éxito! Ya puedes iniciar sesión.', 'success');
+                    toggleAuthMode();
+                }
+            } else {
+                const { data, error } = await supabaseClient.auth.signInWithPassword({ email, password });
+                if (error) { showAlert('Credenciales incorrectas.'); return; }
+                
+                currentUser = data.user;
+                showView('admin-view');
+                loadAdminLinks();
+            }
+        }
+
+        async function logout() {
+            await supabaseClient.auth.signOut();
+            window.location.href = window.location.pathname;
+        }
+
+        // Cargar Perfil Público
+        async function loadPublicProfile(username) {
+            showView('public-view');
+            const { data: profile, error } = await supabaseClient
+                .from('profiles')
+                .select('*')
+                .eq('username', username)
+                .single();
+
+            if (error || !profile) {
+                document.getElementById('pub-name').textContent = 'Página no encontrada';
+                document.getElementById('pub-bio').textContent = 'El usuario que buscas no existe o fue eliminado.';
+                return;
+            }
+
+            document.getElementById('pub-name').textContent = profile.full_name || profile.username;
+            document.getElementById('pub-bio').textContent = profile.bio || 'Enlaces oficiales.';
+            document.getElementById('pub-avatar').textContent = profile.username.substring(0, 2).toUpperCase();
+
+            // Cargar enlaces del usuario
+            const { data: links } = await supabaseClient
+                .from('links')
+                .select('*')
+                .eq('user_id', profile.id)
+                .order('position', { ascending: true });
+
+            const linksContainer = document.getElementById('pub-links');
+            linksContainer.innerHTML = '';
+
+            if (links && links.length > 0) {
+                links.forEach(link => {
+                    linksContainer.innerHTML += `
+                        <a href="${link.url}" target="_blank" class="link-card">
+                            <div class="link-content">
+                                <i class="${link.icon || 'fa-solid fa-link'}"></i>
+                                <span>${link.title}</span>
+                            </div>
+                            <i class="fa-solid fa-arrow-right" style="font-size:0.85rem; color:var(--text-secondary);"></i>
+                        </a>
+                    `;
+                });
+            } else {
+                linksContainer.innerHTML = '<p style="text-align:center; color:var(--text-secondary);">No hay enlaces disponibles aún.</p>';
+            }
+        }
+
+        // Cargar Enlaces en el Panel de Administración
+        async function loadAdminLinks() {
+            const { data: links } = await supabaseClient
+                .from('links')
+                .select('*')
+                .eq('user_id', currentUser.id)
+                .order('position', { ascending: true });
+
+            const container = document.getElementById('admin-links-list');
+            container.innerHTML = '';
+
+            if (links && links.length > 0) {
+                links.forEach(link => {
+                    container.innerHTML += `
+                        <div class="link-item-admin">
+                            <div>
+                                <strong style="font-size:0.9rem; display:block;">${link.title}</strong>
+                                <span style="font-size:0.75rem; color:var(--text-secondary);">${link.url}</span>
+                            </div>
+                            <button class="btn btn-danger" onclick="deleteLink('${link.id}')">Eliminar</button>
+                        </div>
+                    `;
+                });
+            } else {
+                container.innerHTML = '<p style="font-size:0.85rem; color:var(--text-secondary);">Aún no has agregado enlaces.</p>';
+            }
+        }
+
+        async function addLink() {
+            const title = document.getElementById('link-title').value;
+            const url = document.getElementById('link-url').value;
+            const icon = document.getElementById('link-icon').value;
+
+            if (!title || !url) {
+                alert('El título y la URL son obligatorios.');
+                return;
+            }
+
+            const { error } = await supabaseClient.from('links').insert([{
+                user_id: currentUser.id,
+                title,
+                url,
+                icon,
+                position: Date.now()
+            }]);
+
+            if (!error) {
+                document.getElementById('link-title').value = '';
+                document.getElementById('link-url').value = '';
+                loadAdminLinks();
+            } else {
+                alert('Error al guardar el enlace.');
+            }
+        }
+
+        async function deleteLink(id) {
+            await supabaseClient.from('links').delete().eq('id', id);
+            loadAdminLinks();
+        }
+    </script>
+</body>
+</html>
+
