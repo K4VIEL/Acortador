@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -540,7 +539,7 @@
 
             const { data, error } = await supabaseClient.storage.from('uploads').upload(filePath, file);
             if (error) {
-                console.error('Error al subir:', error.message);
+                alert('Error al subir imagen al Storage: ' + error.message);
                 return null;
             }
 
@@ -611,9 +610,11 @@
         async function saveProfileChanges() {
             if (!currentUser) return;
             
+            // Subir foto de perfil desde archivo si se seleccionó uno
             let uploadedAvatar = await uploadFileToSupabase('file-avatar');
             let avatar_url = uploadedAvatar || document.getElementById('profile-avatar').value.trim();
 
+            // Subir fondo desde archivo si se seleccionó uno
             let uploadedBg = await uploadFileToSupabase('file-bg');
             let bg_image = uploadedBg || document.getElementById('profile-bg-image').value.trim();
 
@@ -625,20 +626,21 @@
             const text_color = document.getElementById('text-color-text').value;
             const accent_color = document.getElementById('accent-color-text').value;
 
+            // Actualizar inputs visuales inmediatamente
+            if (uploadedAvatar) document.getElementById('profile-avatar').value = uploadedAvatar;
+            if (uploadedBg) document.getElementById('profile-bg-image').value = uploadedBg;
+
             const { error } = await supabaseClient
                 .from('profiles')
                 .update({ full_name, bio, avatar_url, bg_image, font_family, bg_color, card_bg, text_color, accent_color })
                 .eq('id', currentUser.id);
 
             if (!error) {
-                if(avatar_url) document.getElementById('profile-avatar').value = avatar_url;
-                if(bg_image) document.getElementById('profile-bg-image').value = bg_image;
-
                 applyStyles(bg_color, card_bg, text_color, accent_color, font_family, bg_image);
                 loadUserDataAndLinks();
                 alert('¡Estilo y fotos guardados con éxito!');
             } else {
-                alert('Error al guardar: ' + error.message);
+                alert('Error al guardar en la base de datos: ' + error.message);
             }
         }
 
@@ -807,3 +809,4 @@
     </script>
 </body>
 </html>
+
