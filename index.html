@@ -340,7 +340,7 @@
                 <a id="share-link-btn" href="#" target="_blank" class="btn btn-primary" style="font-size: 0.85rem; padding: 10px;">Ver mi página pública</a>
             </div>
 
-            <!-- PERSONALIZACIÓN TOTAL (CON SUBIDA DE ARCHIVOS O URL) -->
+            <!-- PERSONALIZACIÓN TOTAL -->
             <div class="card-box">
                 <h3>Personalización y Diseño</h3>
                 <div class="form-group">
@@ -349,21 +349,19 @@
                 </div>
                 <div class="form-group">
                     <label>Biografía / Descripción</label>
-                    <input type="text" id="profile-bio" class="form-control" placeholder="Lo mejor en tecnología y novedades...">
+                    <input type="text" id="profile-bio" class="form-control" placeholder="Lo mejor en tecnología...">
                 </div>
                 
-                <!-- Foto de perfil: Subir archivo o URL -->
                 <div class="form-group">
-                    <label>Foto de Perfil / Logo (Sube archivo o pega enlace)</label>
+                    <label>Foto de Perfil / Logo (Sube archivo o pega URL)</label>
                     <input type="file" id="file-avatar" class="form-control" accept="image/*" style="margin-bottom: 8px;">
-                    <input type="text" id="profile-avatar" class="form-control" placeholder="O pega la URL de la imagen aquí...">
+                    <input type="text" id="profile-avatar" class="form-control" placeholder="O pega URL de imagen...">
                 </div>
 
-                <!-- Fondo de pantalla: Subir archivo o URL -->
                 <div class="form-group">
-                    <label>Fondo de Pantalla / Wallpaper (Sube archivo o pega enlace)</label>
+                    <label>Fondo de Pantalla / Wallpaper (Sube archivo o pega URL)</label>
                     <input type="file" id="file-bg" class="form-control" accept="image/*" style="margin-bottom: 8px;">
-                    <input type="text" id="profile-bg-image" class="form-control" placeholder="O pega la URL de fondo aquí...">
+                    <input type="text" id="profile-bg-image" class="form-control" placeholder="O pega URL de fondo...">
                 </div>
 
                 <div class="form-group">
@@ -411,7 +409,7 @@
                 <button class="btn btn-primary" onclick="saveProfileChanges()">Guardar Todo el Estilo</button>
             </div>
 
-            <!-- AGREGAR ENLACES (CON SUBIDA DE IMAGEN O URL) -->
+            <!-- AGREGAR ENLACES -->
             <div class="card-box">
                 <h3>Agregar Nuevo Enlace</h3>
                 <div class="form-group">
@@ -419,13 +417,13 @@
                     <input type="text" id="link-title" class="form-control" placeholder="WhatsApp Oficial">
                 </div>
                 <div class="form-group">
-                    <label>URL o enlace</label>
+                    <label>URL o enlace (ej: https://...)</label>
                     <input type="text" id="link-url" class="form-control" placeholder="https://wa.me/...">
                 </div>
                 <div class="form-group">
-                    <label>Miniatura / Ícono del Botón (Sube archivo o pega enlace/ícono)</label>
+                    <label>Miniatura / Ícono (Sube archivo o pega URL/ícono)</label>
                     <input type="file" id="file-link-icon" class="form-control" accept="image/*" style="margin-bottom: 8px;">
-                    <input type="text" id="link-icon" class="form-control" placeholder="O pega URL de imagen / fa-brands fa-whatsapp">
+                    <input type="text" id="link-icon" class="form-control" placeholder="O pega URL / fa-brands fa-whatsapp">
                 </div>
                 <button class="btn btn-primary" onclick="addLink()">Guardar Enlace</button>
             </div>
@@ -481,7 +479,7 @@
                 loadPublicProfile(usernameParam);
             } else {
                 const { data: { session } } = await supabaseClient.auth.getSession();
-                if (session) {
+                if (session && session.user) {
                     currentUser = session.user;
                     showView('admin-view');
                     loadUserDataAndLinks();
@@ -529,24 +527,23 @@
             }
         }
 
-        // Función para subir archivos al Storage de Supabase
         async function uploadFileToSupabase(fileInputId) {
             const fileInput = document.getElementById(fileInputId);
-            if (!fileInput || fileInput.files.length === 0) return null;
+            if (!fileInput || !fileInput.files || fileInput.files.length === 0) return null;
 
             const file = fileInput.files[0];
             const fileExt = file.name.split('.').pop();
-            const fileName = `${Date.now()}_${Math.random().toString(36.substring(2))}.${fileExt}`;
+            const fileName = `${Date.now()}_${Math.random().toString(36).substring(2)}.${fileExt}`;
             const filePath = `${currentUser.id}/${fileName}`;
 
             const { data, error } = await supabaseClient.storage.from('uploads').upload(filePath, file);
             if (error) {
-                alert('Error al subir la imagen: ' + error.message);
+                console.error('Error al subir:', error.message);
                 return null;
             }
 
             const { data: publicUrlData } = supabaseClient.storage.from('uploads').getPublicUrl(filePath);
-            return publicUrlData.publicUrl;
+            return publicUrlData ? publicUrlData.publicUrl : null;
         }
 
         async function handleAuth() {
@@ -563,16 +560,18 @@
 
                 if (data.user) {
                     await supabaseClient.from('profiles').insert([{ id: data.user.id, username, full_name: username }]);
-                    showAlert('¡Cuenta creada! Ya puedes iniciar sesión.', 'success');
+                    showAlert('¡Cuenta creada con éxito! Ya puedes iniciar sesión.', 'success');
                     toggleAuthMode();
                 }
             } else {
                 const { data, error } = await supabaseClient.auth.signInWithPassword({ email, password });
-                if (error) { showAlert('Credenciales incorrectas.'); return; }
+                if (error) { showAlert('Correo o contraseña incorrectos.'); return; }
                 
-                currentUser = data.user;
-                showView('admin-view');
-                loadUserDataAndLinks();
+                if (data.session && data.session.user) {
+                    currentUser = data.session.user;
+                    showView('admin-view');
+                    loadUserDataAndLinks();
+                }
             }
         }
 
@@ -582,6 +581,7 @@
         }
 
         async function loadUserDataAndLinks() {
+            if (!currentUser) return;
             const { data: profile } = await supabaseClient.from('profiles').select('*').eq('id', currentUser.id).single();
 
             if (profile) {
@@ -607,13 +607,13 @@
         }
 
         async function saveProfileChanges() {
-            // Verificar si subió un archivo nuevo para el avatar o usar la URL escrita
+            if (!currentUser) return;
+            
             let avatar_url = await uploadFileToSupabase('file-avatar');
             if (!avatar_url) {
                 avatar_url = document.getElementById('profile-avatar').value.trim();
             }
 
-            // Verificar si subió un archivo nuevo para el fondo
             let bg_image = await uploadFileToSupabase('file-bg');
             if (!bg_image) {
                 bg_image = document.getElementById('profile-bg-image').value.trim();
@@ -635,7 +635,7 @@
             if (!error) {
                 applyStyles(bg_color, card_bg, text_color, accent_color, font_family, bg_image);
                 loadUserDataAndLinks();
-                alert('¡Estilo y fotos guardadas con éxito!');
+                alert('¡Estilo y perfil guardados con éxito!');
             } else {
                 alert('Error al guardar: ' + error.message);
             }
@@ -695,6 +695,7 @@
         }
 
         async function renderLivePreview(profile) {
+            if (!currentUser) return;
             const { data: links } = await supabaseClient.from('links').select('*').eq('user_id', currentUser.id).order('position', { ascending: true });
 
             const bg = profile.bg_color || '#0f172a';
@@ -744,6 +745,7 @@
         }
 
         async function loadAdminLinks() {
+            if (!currentUser) return;
             const { data: links } = await supabaseClient.from('links').select('*').eq('user_id', currentUser.id).order('position', { ascending: true });
             const container = document.getElementById('admin-links-list');
             container.innerHTML = '';
@@ -769,12 +771,12 @@
         }
 
         async function addLink() {
+            if (!currentUser) return;
             const title = document.getElementById('link-title').value;
             const url = document.getElementById('link-url').value;
 
             if (!title || !url) { alert('El título y la URL son obligatorios.'); return; }
 
-            // Subir imagen del botón si seleccionó archivo, o usar el texto (URL o icono)
             let icon = await uploadFileToSupabase('file-link-icon');
             if (!icon) {
                 icon = document.getElementById('link-icon').value.trim() || 'fa-solid fa-link';
